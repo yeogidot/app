@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
+import { StyleSheet, View, BackHandler, Platform, Text, PermissionsAndroid } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +8,36 @@ import * as ImagePicker from 'expo-image-picker';
 export default function App() {
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
+
+  useEffect(() => {
+    const requestPermissions = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          const permissionsToRequest: import('react-native').Permission[] = [];
+          
+          if (Number(Platform.Version) >= 33) {
+            permissionsToRequest.push(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
+          } else {
+            permissionsToRequest.push(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+          }
+
+          if (Number(Platform.Version) >= 29) {
+            // ACCESS_MEDIA_LOCATION is required to retrieve EXIF location data on Android 10+
+            permissionsToRequest.push(PermissionsAndroid.PERMISSIONS.ACCESS_MEDIA_LOCATION);
+          }
+
+          if (permissionsToRequest.length > 0) {
+            await PermissionsAndroid.requestMultiple(permissionsToRequest);
+          }
+        } catch (err) {
+          console.warn('Failed to request media permissions on startup', err);
+        }
+      }
+    };
+
+    requestPermissions();
+  }, []);
+
 
   useEffect(() => {
     let backHandler: any;
