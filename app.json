@@ -25,15 +25,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "scheme": "yeogidot",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.app",
       "icon": {
         "dark": "./assets/ios-icon-dark.png",
         "light": "./assets/ios-icon-light.png"
       }
+      "bundleIdentifier": "com.yeogidot.app"
     },
     "android": {
+      "package": "com.yeogidot.app",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -41,7 +43,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.app"
+      "package": "com.yeogidot.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
