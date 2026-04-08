@@ -1,10 +1,24 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "여기닷",
+    "slug": "yeogidot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#00AEFF",
+          "image": "./assets/splash-icon-light.png",
+          "dark": {
+            "image": "./assets/splash-icon-light.png",
+            "backgroundColor": "#00AEFF"
+          },
+          "imageWidth": 200
+        }
+      ]
+    ],
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -14,12 +28,16 @@
     "scheme": "yeogidot",
     "ios": {
       "supportsTablet": true,
+      "icon": {
+        "dark": "./assets/ios-icon-dark.png",
+        "light": "./assets/ios-icon-light.png"
+      }
       "bundleIdentifier": "com.yeogidot.app"
     },
     "android": {
       "package": "com.yeogidot.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
