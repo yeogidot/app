@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, BackHandler, Platform, SafeAreaView, Text } from 'react-native';
+import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function App() {
   const webViewRef = useRef<WebView>(null);
@@ -39,30 +41,69 @@ export default function App() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="auto" />
-      <WebView
-        ref={webViewRef}
-        key={baseUrl}
-        source={{ uri: baseUrl }}
-        onNavigationStateChange={(navState: WebViewNavigation) => {
-          setCanGoBack(navState.canGoBack);
-        }}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        startInLoadingState={true}
-        originWhitelist={['*']}
-        onRenderProcessGone={(syntheticEvent) => {
-          console.warn('WebView render process gone:', syntheticEvent.nativeEvent);
-        }}
-        onContentProcessDidTerminate={(syntheticEvent) => {
-          console.warn('WebView content process terminated:', syntheticEvent.nativeEvent);
-        }}
-        onError={(syntheticEvent) => {
-          console.warn('WebView error:', syntheticEvent.nativeEvent);
-        }}
-      />
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="auto" />
+        <WebView
+          ref={webViewRef}
+          key={baseUrl}
+          source={{ uri: baseUrl }}
+          onNavigationStateChange={(navState: WebViewNavigation) => {
+            setCanGoBack(navState.canGoBack);
+          }}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          startInLoadingState={true}
+          originWhitelist={['*']}
+          onRenderProcessGone={(syntheticEvent) => {
+            console.warn('WebView render process gone:', JSON.stringify(syntheticEvent.nativeEvent, null, 2));
+          }}
+          onContentProcessDidTerminate={(syntheticEvent) => {
+            console.warn('WebView content process terminated:', JSON.stringify(syntheticEvent.nativeEvent, null, 2));
+          }}
+          onError={(syntheticEvent) => {
+            console.warn('WebView error:', JSON.stringify(syntheticEvent.nativeEvent, null, 2));
+          }}
+          onMessage={async (event) => {
+            try {
+              const data = JSON.parse(event.nativeEvent.data);
+              if (data.type === 'REQUEST_PHOTO') {
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (status !== 'granted') {
+                  console.warn('Media library permission not granted');
+                  return;
+                }
+
+                const result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ['images'],
+                  allowsEditing: false,
+                  allowsMultipleSelection: true,
+                  quality: 1,
+                  exif: true,
+                  base64: true,
+                });
+
+                if (!result.canceled && result.assets && result.assets.length > 0) {
+                  const responseData = result.assets.map(asset => ({
+                    uri: asset.uri,
+                    base64Url: `data:image/jpeg;base64,${asset.base64}`,
+                    exif: asset.exif,
+                  }));
+
+                  const script = `
+                    window.dispatchEvent(new CustomEvent('onPhotoSelected', { detail: ${JSON.stringify(responseData)} }));
+                    true;
+                  `;
+                  webViewRef.current?.injectJavaScript(script);
+                }
+              }
+            } catch (error) {
+              console.error('Error handling WebView message:', error);
+            }
+          }}
+        />
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
