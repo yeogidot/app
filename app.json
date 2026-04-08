@@ -31,11 +31,10 @@
       "icon": {
         "dark": "./assets/ios-icon-dark.png",
         "light": "./assets/ios-icon-light.png"
-      }
+      },
       "bundleIdentifier": "com.yeogidot.app"
     },
     "android": {
-      "package": "com.yeogidot.app",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png",
