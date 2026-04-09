@@ -1,12 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  BackHandler,
-  Platform,
-  SafeAreaView,
-  Text,
-} from 'react-native';
+import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
