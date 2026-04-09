@@ -1,9 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewNavigation } from 'react-native-webview';
-import { useLinkingURL, parse } from 'expo-linking';
-import { useRef, useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import {
@@ -19,17 +17,6 @@ export default function App() {
         <Text>Error: EXPO_PUBLIC_BASE_URL is not defined in .env</Text>
       </View>
     );
-  const url = useLinkingURL();
-  const URLObject = url ? parse(url) : undefined;
-  const isFromScheme = URLObject?.scheme === 'yeogidot';
-  const isShare = URLObject?.hostname === 'share';
-  const slash = !baseUrl.endsWith('/') ? '/' : '';
-  const isValidPath = URLObject?.path ? uuidRegex.test(URLObject.path) : false;
-  const webViewUrl =
-    baseUrl +
-    (isFromScheme && isShare && isValidPath
-      ? `${slash}share/${URLObject.path}`
-      : '');
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
@@ -82,8 +69,6 @@ export default function App() {
       }
     };
   }, [canGoBack]);
-
-  const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
 
   if (!baseUrl) {
     return (
