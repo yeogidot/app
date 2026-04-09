@@ -1,11 +1,13 @@
-import { StyleSheet, View, Text, Platform, BackHandler } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewNavigation } from 'react-native-webview';
-import { useLinkingURL, parse } from 'expo-linking';
-import { useRef, useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-const uuidRegex =
-  /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
+import * as Linking from 'expo-linking';
+import {
+  buildWebViewTargetUri,
+  parseDeepLinkToAppRoute,
+} from './utils/webview';
 
 export default function App() {
   const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
@@ -15,19 +17,35 @@ export default function App() {
         <Text>Error: EXPO_PUBLIC_BASE_URL is not defined in .env</Text>
       </View>
     );
-  const url = useLinkingURL();
-  const URLObject = url ? parse(url) : undefined;
-  const isFromScheme = URLObject?.scheme === 'yeogidot';
-  const isShare = URLObject?.hostname === 'share';
-  const slash = !baseUrl.endsWith('/') ? '/' : '';
-  const isValidPath = URLObject?.path ? uuidRegex.test(URLObject.path) : false;
-  const webViewUrl =
-    baseUrl +
-    (isFromScheme && isShare && isValidPath
-      ? `${slash}share/${URLObject.path}`
-      : '');
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
+  const [initialRoute, setInitialRoute] = useState<string | null>(null);
+  const [isUrlParsed, setIsUrlParsed] = useState(false);
+
+  useEffect(() => {
+    Linking.getInitialURL().then((url: string | null) => {
+      const route = parseDeepLinkToAppRoute(url);
+      setIsUrlParsed(true);
+      if (!route) return;
+      setInitialRoute(route);
+    });
+
+    const subscription = Linking.addEventListener(
+      'url',
+      ({ url }: { url: string }) => {
+        const route = parseDeepLinkToAppRoute(url);
+        if (!route || !webViewRef.current) return;
+        webViewRef.current.injectJavaScript(
+          `window.location.href = '${route}'; true;`
+        );
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   useEffect(() => {
     let backHandler: any;
     const onBackPress = () => {
@@ -52,13 +70,27 @@ export default function App() {
     };
   }, [canGoBack]);
 
+  if (!baseUrl) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text>Error: EXPO_PUBLIC_BASE_URL is not defined in .env</Text>
+      </View>
+    );
+  }
+
+  if (!isUrlParsed) {
+    return <View style={styles.container} />; // Render empty view while parsing the initial URL
+  }
+
+  const targetUri = buildWebViewTargetUri(baseUrl, initialRoute);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style='auto' />
       <WebView
         ref={webViewRef}
         key={baseUrl}
-        source={{ uri: webViewUrl }}
+        source={{ uri: targetUri }}
         onNavigationStateChange={(navState: WebViewNavigation) => {
           setCanGoBack(navState.canGoBack);
         }}
