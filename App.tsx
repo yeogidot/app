@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView, WebViewNavigation } from 'react-native-webview';
+import {
+  WebView,
+  WebViewMessageEvent,
+  WebViewNavigation,
+} from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
+import * as ImagePicker from 'expo-image-picker';
 import {
   buildWebViewTargetUri,
   parseDeepLinkToAppRoute,
@@ -21,6 +26,28 @@ export default function App() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
   const [isUrlParsed, setIsUrlParsed] = useState(false);
+
+  const handleWebViewMessage = async (event: WebViewMessageEvent) => {
+    try {
+      const payload = JSON.parse(event.nativeEvent.data);
+      if (payload?.type !== 'SELECT_IMAGES') return;
+
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        console.warn('Media library permission denied');
+        return;
+      }
+
+      const allowsMultipleSelection = payload?.allowMultiple !== false;
+
+      await ImagePicker.launchImageLibraryAsync({
+        allowsMultipleSelection,
+      });
+    } catch (error) {
+      console.warn('Failed to handle WebView message:', error);
+    }
+  };
 
   useEffect(() => {
     Linking.getInitialURL().then((url: string | null) => {
@@ -98,6 +125,7 @@ export default function App() {
         domStorageEnabled={true}
         startInLoadingState={true}
         originWhitelist={['*']}
+        onMessage={handleWebViewMessage}
         onRenderProcessGone={(syntheticEvent) => {
           console.warn(
             'WebView render process gone:',
