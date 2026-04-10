@@ -9,10 +9,13 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
+import { photo } from './types/photo.type';
+import { getCreatedDateTime, getGPSCoordinates } from './utils/exif';
 import {
   buildWebViewTargetUri,
   parseDeepLinkToAppRoute,
 } from './utils/webview';
+import * as MediaLibrary from 'expo-media-library';
 
 export default function App() {
   const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
@@ -32,8 +35,7 @@ export default function App() {
       const payload = JSON.parse(event.nativeEvent.data);
       if (payload?.type !== 'SELECT_IMAGES') return;
 
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult = await MediaLibrary.requestPermissionsAsync();
       if (!permissionResult.granted) {
         console.warn('Media library permission denied');
         return;
@@ -41,9 +43,40 @@ export default function App() {
 
       const allowsMultipleSelection = payload?.allowMultiple !== false;
 
-      await ImagePicker.launchImageLibraryAsync({
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
         allowsMultipleSelection,
+        base64: true,
+        exif: true,
+        legacy: true,
       });
+
+      if (pickerResult.canceled) {
+        webViewRef.current?.postMessage(
+          JSON.stringify({ type: 'SELECT_IMAGES_RESULT', photos: [] })
+        );
+        return;
+      }
+
+      const photos: photo[] = await Promise.all(
+        pickerResult.assets.map(async (asset) => {
+          const [GPSCoordinates, date] = await Promise.all([
+            getGPSCoordinates(asset.uri),
+            getCreatedDateTime(asset.uri),
+          ]);
+          return {
+            photoBase64: asset.base64 ?? '',
+            GPSCoordinates,
+            date,
+          };
+        })
+      );
+
+      webViewRef.current?.postMessage(
+        JSON.stringify({
+          type: 'SELECT_IMAGES_RESULT',
+          photos,
+        })
+      );
     } catch (error) {
       console.warn('Failed to handle WebView message:', error);
     }
