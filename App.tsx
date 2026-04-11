@@ -38,7 +38,12 @@ export default function App() {
       const permissionResult = await MediaLibrary.requestPermissionsAsync();
       if (!permissionResult.granted) {
         console.warn('Media library permission denied');
-        return;
+        return webViewRef.current?.postMessage(
+          JSON.stringify({
+            type: 'SELECT_IMAGES_ERROR',
+            message: `사진 접근 권한을 '모두 허용'으로 설정해주세요.`,
+          })
+        );
       }
 
       const allowsMultipleSelection = payload?.allowMultiple !== false;
