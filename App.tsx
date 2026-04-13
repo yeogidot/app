@@ -9,7 +9,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
-import { photo } from './types/photo.type';
+import { Photo } from './types/photo.type';
 import { getCreatedDateTime, getGPSCoordinates } from './utils/exif';
 import {
   buildWebViewTargetUri,
@@ -62,7 +62,7 @@ export default function App() {
         return;
       }
 
-      const photos: photo[] = await Promise.all(
+      const photos: Photo[] = await Promise.all(
         pickerResult.assets.map(async (asset) => {
           const [GPSCoordinates, date] = await Promise.all([
             getGPSCoordinates(asset.uri),
