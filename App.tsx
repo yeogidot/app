@@ -1,52 +1,49 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, BackHandler, Platform, SafeAreaView, Text } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
+import {
+  buildWebViewTargetUri,
+  parseDeepLinkToAppRoute,
+} from './utils/webview';
 
 export default function App() {
+  const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
+  if (!baseUrl)
+    return (
+      <View style={styles.errorContainer}>
+        <Text>Error: EXPO_PUBLIC_BASE_URL is not defined in .env</Text>
+      </View>
+    );
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
   const [isUrlParsed, setIsUrlParsed] = useState(false);
 
   useEffect(() => {
-    const handleDeepLinkUrl = (url: string | null): string | null => {
-      if (!url) return null;
-      try {
-        const parsed = Linking.parse(url);
-        const routePath = [parsed.hostname, parsed.path].filter(Boolean).join('/');
-        if (routePath) {
-          let queryString = '';
-          if (parsed.queryParams && Object.keys(parsed.queryParams).length > 0) {
-            queryString = '?' + Object.entries(parsed.queryParams)
-              .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
-              .join('&');
-          }
-          return `/${routePath}${queryString}`.replace(/\/\//g, '/');
-        }
-      } catch (e) {
-        console.warn('Deep link parse error', e);
-      }
-      return null;
-    };
-
     Linking.getInitialURL().then((url: string | null) => {
-      const route = handleDeepLinkUrl(url);
-      if (route) {
-        setInitialRoute(route);
-      }
+      const route = parseDeepLinkToAppRoute(url);
       setIsUrlParsed(true);
+      if (!route) return;
+      setInitialRoute(route);
     });
 
-    const subscription = Linking.addEventListener('url', ({ url }: { url: string }) => {
-      const route = handleDeepLinkUrl(url);
-      if (route && webViewRef.current) {
-        webViewRef.current.injectJavaScript(`window.location.href = '${route}'; true;`);
+    const subscription = Linking.addEventListener(
+      'url',
+      ({ url }: { url: string }) => {
+        const route = parseDeepLinkToAppRoute(url);
+        if (!route || !webViewRef.current) return;
+        webViewRef.current.injectJavaScript(
+          `window.location.href = '${route}'; true;`
+        );
       }
-    });
+    );
 
-    return () => { subscription.remove(); };
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -60,7 +57,10 @@ export default function App() {
     };
 
     if (Platform.OS === 'android') {
-      backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress
+      );
     }
 
     return () => {
@@ -69,8 +69,6 @@ export default function App() {
       }
     };
   }, [canGoBack]);
-
-  const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
 
   if (!baseUrl) {
     return (
@@ -84,18 +82,13 @@ export default function App() {
     return <View style={styles.container} />; // Render empty view while parsing the initial URL
   }
 
-  let targetUri = baseUrl;
-  if (initialRoute) {
-    const originMatch = baseUrl.match(/^https?:\/\/[^\/]+/);
-    const origin = originMatch ? originMatch[0] : baseUrl;
-    targetUri = `${origin}${initialRoute}`;
-  }
+  const targetUri = buildWebViewTargetUri(baseUrl, initialRoute);
 
 
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="auto" />
+      <StatusBar style='auto' />
       <WebView
         ref={webViewRef}
         key={baseUrl}
@@ -108,10 +101,16 @@ export default function App() {
         startInLoadingState={true}
         originWhitelist={['*']}
         onRenderProcessGone={(syntheticEvent) => {
-          console.warn('WebView render process gone:', syntheticEvent.nativeEvent);
+          console.warn(
+            'WebView render process gone:',
+            syntheticEvent.nativeEvent
+          );
         }}
         onContentProcessDidTerminate={(syntheticEvent) => {
-          console.warn('WebView content process terminated:', syntheticEvent.nativeEvent);
+          console.warn(
+            'WebView content process terminated:',
+            syntheticEvent.nativeEvent
+          );
         }}
         onError={(syntheticEvent) => {
           console.warn('WebView error:', syntheticEvent.nativeEvent);
