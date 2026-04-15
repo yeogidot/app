@@ -91,6 +91,8 @@ export default function App() {
     targetUri = `${origin}${initialRoute}`;
   }
 
+
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
@@ -105,15 +107,6 @@ export default function App() {
         domStorageEnabled={true}
         startInLoadingState={true}
         originWhitelist={['*']}
-        injectedJavaScript={`
-          setInterval(function() {
-            var btn = document.querySelector('button[class*="launchButton"]');
-            if (btn && btn.parentElement) {
-              btn.parentElement.style.display = 'none';
-            }
-          }, 300);
-          true;
-        `}
         onRenderProcessGone={(syntheticEvent) => {
           console.warn('WebView render process gone:', syntheticEvent.nativeEvent);
         }}
