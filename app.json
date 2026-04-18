@@ -17,6 +17,14 @@
           },
           "imageWidth": 200
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "$(PRODUCT_NAME)이 사진에 접근하는 것을 허용하시겠습니까?",
+          "isAccessMediaLocationEnabled": true,
+          "granularPermissions": ["photo"]
+        }
       ]
     ],
     "userInterfaceStyle": "light",
