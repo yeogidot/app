@@ -47,7 +47,7 @@ EXPO_PUBLIC_BASE_URL=https://your-web-domain.com
 
 ### 4) 앱 실행
 
-````bash
+```bash
 # Expo 개발 서버
 npm run start
 
