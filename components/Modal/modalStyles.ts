@@ -28,7 +28,7 @@ export const modalStyles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontFamily: 'Noto Sans KR',
+    fontFamily: 'NotoSansKR',
     fontWeight: '700',
     margin: 0,
   },
