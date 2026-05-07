@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View, BackHandler, Platform, Text, Dimensions } from 'react-native';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   WebView,
   WebViewMessageEvent,
@@ -9,7 +9,9 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
+import * as Font from 'expo-font';
 import { Photo } from './types/photo.type';
+import useModalNative from './hooks/useModal';
 import { getCreatedDateTime, getGPSCoordinates } from './utils/exif';
 import {
   buildWebViewTargetUri,
@@ -17,7 +19,21 @@ import {
 } from './utils/webview';
 import * as MediaLibrary from 'expo-media-library';
 
-export default function App() {
+function AppContent() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    Font.loadAsync({
+      'NotoSansKR': require('./assets/fonts/NotoSansKR-VF.ttf'),
+    })
+      .then(() => setFontsLoaded(true))
+      .catch((error) => {
+        console.error('Font loading failed:', error);
+        setFontsLoaded(true);
+      });
+  }, []);
+
+  const insets = useSafeAreaInsets();
   const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
   if (!baseUrl)
     return (
@@ -26,6 +42,7 @@ export default function App() {
       </View>
     );
   const webViewRef = useRef<WebView>(null);
+  const { openModal, modalElement } = useModalNative();
   const [canGoBack, setCanGoBack] = useState(false);
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
   const [isUrlParsed, setIsUrlParsed] = useState(false);
@@ -118,7 +135,12 @@ export default function App() {
         webViewRef.current.goBack();
         return true;
       }
-      return false;
+      openModal({
+        title: '종료',
+        message: '정말로 종료하시겠습니까?',
+        onConfirm: () => BackHandler.exitApp(),
+      });
+      return true;
     };
 
     if (Platform.OS === 'android') {
@@ -135,10 +157,10 @@ export default function App() {
     };
   }, [canGoBack]);
 
-  if (!baseUrl) {
+  if (!fontsLoaded) {
     return (
       <View style={styles.errorContainer}>
-        <Text>Error: EXPO_PUBLIC_BASE_URL is not defined in .env</Text>
+        <Text style={styles.text}>Loading fonts...</Text>
       </View>
     );
   }
@@ -180,7 +202,16 @@ export default function App() {
           console.warn('WebView error:', syntheticEvent.nativeEvent);
         }}
       />
+      {fontsLoaded && modalElement(insets)}
     </SafeAreaView>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
   );
 }
 
@@ -194,5 +225,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  text: {
+    fontFamily: 'NotoSansKR',
   },
 });
