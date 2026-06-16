@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, BackHandler, Platform, Text, Dimensions } from 'react-native';
+import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   WebView,
@@ -33,9 +33,15 @@ function AppContent() {
       });
   }, []);
 
+  const isHome = (homeURLs: string[], url: string) => {
+    const normalize = (u: string) => u.replace(/\/$/, '');
+    return homeURLs.some((homeURL) => normalize(url) === normalize(homeURL));
+  };
+
   const insets = useSafeAreaInsets();
-  const baseUrl = process.env.EXPO_PUBLIC_BASE_URL;
-  if (!baseUrl)
+  const baseURL = process.env.EXPO_PUBLIC_BASE_URL;
+  const homeURLs = [`${baseURL}/my-travel`, `${baseURL}/login`, baseURL];
+  if (!baseURL)
     return (
       <View style={styles.errorContainer}>
         <Text>Error: EXPO_PUBLIC_BASE_URL is not defined in .env</Text>
@@ -131,7 +137,7 @@ function AppContent() {
   useEffect(() => {
     let backHandler: any;
     const onBackPress = () => {
-      if (canGoBack && webViewRef.current) {
+      if (canGoBack && webViewRef.current?.goBack) {
         webViewRef.current.goBack();
         return true;
       }
@@ -169,17 +175,19 @@ function AppContent() {
     return <View style={styles.container} />; // Render empty view while parsing the initial URL
   }
 
-  const targetUri = buildWebViewTargetUri(baseUrl, initialRoute);
+  const targetUri = buildWebViewTargetUri(baseURL, initialRoute);
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style='auto' />
       <WebView
         ref={webViewRef}
-        key={baseUrl}
+        key={baseURL}
         source={{ uri: targetUri }}
         onNavigationStateChange={(navState: WebViewNavigation) => {
-          setCanGoBack(navState.canGoBack);
+          setCanGoBack(
+            isHome(homeURLs, navState.url) ? false : navState.canGoBack,
+          );
         }}
         javaScriptEnabled={true}
         domStorageEnabled={true}
