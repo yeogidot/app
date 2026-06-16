@@ -40,13 +40,13 @@ export function parseDeepLinkToAppRoute(url: string | null): string | null {
 }
 
 export function buildWebViewTargetUri(
-  baseUrl: string,
-  initialRoute: string | null
+  baseURL: string,
+  initialRoute: string | null,
 ): string {
   if (!initialRoute) {
-    return baseUrl;
+    return baseURL;
   }
-  const originMatch = baseUrl.match(HTTP_ORIGIN_REGEX);
-  const origin = originMatch ? originMatch[0] : baseUrl;
+  const originMatch = baseURL.match(HTTP_ORIGIN_REGEX);
+  const origin = originMatch ? originMatch[0] : baseURL;
   return `${origin}${initialRoute}`;
 }
