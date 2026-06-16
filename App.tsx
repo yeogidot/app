@@ -34,7 +34,8 @@ function AppContent() {
   }, []);
 
   const isHome = (homeURLs: string[], url: string) => {
-    return homeURLs.some((homeURL) => url === homeURL);
+    const normalize = (u: string) => u.replace(/\/$/, '');
+    return homeURLs.some((homeURL) => normalize(url) === normalize(homeURL));
   };
 
   const insets = useSafeAreaInsets();
