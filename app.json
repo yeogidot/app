@@ -43,6 +43,7 @@
       "bundleIdentifier": "com.yeogidot.app"
     },
     "android": {
+      "versionCode" : 3,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png",
