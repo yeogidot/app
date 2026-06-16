@@ -2,7 +2,7 @@
   "expo": {
     "name": "여기닷",
     "slug": "yeogidot",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "plugins": [
