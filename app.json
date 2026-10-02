@@ -11,10 +11,6 @@
         {
           "backgroundColor": "#00AEFF",
           "image": "./assets/splash-icon-light.png",
-          "dark": {
-            "image": "./assets/splash-icon-light.png",
-            "backgroundColor": "#00AEFF"
-          },
           "imageWidth": 200
         }
       ],
