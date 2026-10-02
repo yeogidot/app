@@ -42,3 +42,6 @@ yarn-error.*
 
 .idea
 .vscode
+
+# key
+*.keystore
