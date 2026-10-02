@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, BackHandler, Platform, Text } from 'react-native';
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import {
   WebView,
   WebViewMessageEvent,
@@ -24,7 +28,7 @@ function AppContent() {
 
   useEffect(() => {
     Font.loadAsync({
-      'NotoSansKR': require('./assets/fonts/NotoSansKR-VF.ttf'),
+      NotoSansKR: require('./assets/fonts/NotoSansKR-VF.ttf'),
     })
       .then(() => setFontsLoaded(true))
       .catch((error) => {
@@ -65,7 +69,7 @@ function AppContent() {
           JSON.stringify({
             type: 'SELECT_IMAGES_ERROR',
             message: `사진 접근 권한을 '모두 허용'으로 설정해주세요.`,
-          })
+          }),
         );
       }
 
@@ -80,7 +84,7 @@ function AppContent() {
 
       if (pickerResult.canceled) {
         webViewRef.current?.postMessage(
-          JSON.stringify({ type: 'SELECT_IMAGES_RESULT', photos: [] })
+          JSON.stringify({ type: 'SELECT_IMAGES_RESULT', photos: [] }),
         );
         return;
       }
@@ -96,14 +100,14 @@ function AppContent() {
             GPSCoordinates,
             date,
           };
-        })
+        }),
       );
 
       webViewRef.current?.postMessage(
         JSON.stringify({
           type: 'SELECT_IMAGES_RESULT',
           photos,
-        })
+        }),
       );
     } catch (error) {
       console.warn('Failed to handle WebView message:', error);
@@ -124,9 +128,9 @@ function AppContent() {
         const route = parseDeepLinkToAppRoute(url);
         if (!route || !webViewRef.current) return;
         webViewRef.current.injectJavaScript(
-          `window.location.href = '${route}'; true;`
+          `window.location.href = '${route}'; true;`,
         );
-      }
+      },
     );
 
     return () => {
@@ -152,7 +156,7 @@ function AppContent() {
     if (Platform.OS === 'android') {
       backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
-        onBackPress
+        onBackPress,
       );
     }
 
@@ -179,7 +183,7 @@ function AppContent() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style='auto' />
+      <StatusBar style="dark" />
       <WebView
         ref={webViewRef}
         key={baseURL}
@@ -197,13 +201,13 @@ function AppContent() {
         onRenderProcessGone={(syntheticEvent) => {
           console.warn(
             'WebView render process gone:',
-            syntheticEvent.nativeEvent
+            syntheticEvent.nativeEvent,
           );
         }}
         onContentProcessDidTerminate={(syntheticEvent) => {
           console.warn(
             'WebView content process terminated:',
-            syntheticEvent.nativeEvent
+            syntheticEvent.nativeEvent,
           );
         }}
         onError={(syntheticEvent) => {
